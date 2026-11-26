@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"strconv"
 )
 
 const (
@@ -28,6 +29,30 @@ var (
 	ErrUnknowMetricType  = errors.New("unkown metric type")
 	ErrMustNotBeNil      = errors.New("must not be nil")
 )
+
+func NewMetric(mType string, value string) (Metrics, error) {
+	m := Metrics{}
+
+	switch mType {
+	case Counter:
+		m.MType = Counter
+		delta, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return m, err
+		}
+		m.Delta = &delta
+	case Gauge:
+		m.MType = Gauge
+		value, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return m, err
+		}
+		m.Value = &value
+	default:
+		return m, fmt.Errorf("%w: %s", ErrUnknowMetricType, m.MType)
+	}
+	return m, nil
+}
 
 func (m *Metrics) Validate() (err error) {
 	if m.ID == "" {

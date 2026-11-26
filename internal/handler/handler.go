@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 
 	models "github.com/valeryvash/metrics/internal/model"
@@ -41,30 +40,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	m := models.Metrics{}
-	switch parts[1] {
-	case models.Counter:
-		m.MType = models.Counter
-		delta, err := strconv.ParseInt(parts[3], 10, 64)
-		if err != nil {
-			badRequest(w)
-			return
-		}
-		m.Delta = &delta
-	case models.Gauge:
-		m.MType = models.Gauge
-		value, err := strconv.ParseFloat(parts[3], 64)
-		if err != nil {
-			badRequest(w)
-			return
-		}
-		m.Value = &value
-	default:
+	var (
+		m models.Metrics
+		err error
+	)
+
+	m, err = models.NewMetric(parts[1], parts[3])
+	if err != nil {
 		badRequest(w)
 		return
 	}
 
-	err := h.UpdateMetric(m)
+	err = h.UpdateMetric(m)
 	if err != nil {
 		badRequest(w)
 		return
